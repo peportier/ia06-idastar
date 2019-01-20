@@ -170,11 +170,11 @@ search( const State& current_state,
 
   // sort the neighbors by heuristic value
 
-  sort( neighbors.begin(), neighbors.end(),
-      [](const pair<State,int> &left, const pair<State,int> &right) 
-      {
-        return left.second < right.second;
-      } );
+  //sort( neighbors.begin(), neighbors.end(),
+  //    [](const pair<State,int> &left, const pair<State,int> &right) 
+  //    {
+  //      return left.second < right.second;
+  //    } );
 
 
   for( const pair<State,int> &p : neighbors )
@@ -227,8 +227,8 @@ main()
   //State b = {10,0,2,4,5,1,6,12,11,13,9,7,15,3,14,8}; // 33 -> 59
   //State b = {14,1,9,6,4,8,12,5,7,2,3,0,10,11,13,15}; // 35 -> 45
   //State b = {7,11,8,3,14,0,6,15,1,4,13,9,5,12,2,10}; // C1 36 -> 46
-  State b = {14,10,9,4,13,6,5,8,2,12,7,0,1,3,11,15}; // C2 43 -> 59
-  //State b = {4,8,3,2,0,7,6,5,1}; //C0
+  //State b = {14,10,9,4,13,6,5,8,2,12,7,0,1,3,11,15}; // C2 43 -> 59
+  State b = {4,8,3,2,0,7,6,5,1}; //C0
   //State b = {3,2,5,4,1,8,6,7,0};
   list<State> best_path;
   int nb_visited_state = 0;

@@ -43,52 +43,61 @@ typedef vector<int> State;
 
 typedef function<int( const State& pos )> Heuristic;
 
-int 
-side( const State& b )
+/**
+ * Taille du côté du plateau de jeu
+ */
+int side( const State& board )
 {
-  double y = sqrt( b.size() );
-  int x = y;
-  return x;
+  return (int)sqrt( board.size() );
 }
 
-int 
-manh( const State& b )
+/**
+ * Somme des distances manhattan entre les positions actuelles des pièces
+ * et leurs positions finales
+ */
+int manh( const State& board )
 {
-  int d = 0;
-  int s = side(b);
-  for( int i = 0 ; i < b.size() ; i++ )
+  int sum = 0;
+  int s = side(board);
+  for( int i = 0 ; i < board.size() ; i++ )
   {
-    if( b[i] != 0 )  // not a tile, '0' doesn't count
+    if( board[i] != 0 )  // not a tile, '0' doesn't count
     {
-      d += abs( i / s - b[i] / s ) +
-           abs( i % s - b[i] % s );
+      sum += abs( i / s - board[i] / s ) +
+           abs( i % s - board[i] % s );
     }
   }
-  return d;
+  return sum;
 }
 
-int
-nbmis( const State& b )
+/**
+ * Nombre de pièces incorrectement placées
+ */
+int nbmis( const State& board )
 {
-  int d = 0;
-  for( int i = 0 ; i < b.size() ; i++ )
+  int n = 0;
+  for( int i = 0 ; i < board.size() ; i++ )
   {
-    if( b[i] != 0 ) // not a tile, '0' doesn't count
+    if( board[i] != 0 ) // not a tile, '0' doesn't count
     {
-      if( b[i] != i ) d++;
+      if( board[i] != i ) n++;
     }
   }
-  return d;
+  return n;
 }
 
-bool
-final_state( const State& b )
+/**
+ * Retourne si nous sommes dans l'état final ou non
+ */
+bool final_state( const State& board )
 {
-  return (nbmis(b) == 0); // we use nbmis for it is quick to compute
+  return (nbmis(board) == 0); // we use nbmis for it is quick to compute
 }
 
-void
-print( const State& state )
+/**
+ * Affichage d'un plateau de jeu
+ */
+void print( const State& state )
 {
   int s = side(state);
   for( int i = 0 ; i < state.size() ; i++ )
@@ -99,10 +108,13 @@ print( const State& state )
   cout << endl;
 }
 
-void
-addNeighbor( State &neighbor, vector< pair< State,int > > &neighbors,
+/**
+ * Ajoute un noeud voisin
+ */
+void addNeighbor( State &neighbor, vector< pair< State,int > > &neighbors,
              list<State>& path, Heuristic h )
 {
+  // si il n'est pas déjà dans le trajet
   if( find( path.begin(), path.end(), neighbor ) == path.end() )
   {
     neighbors.push_back( make_pair( neighbor, h(neighbor) ) );
@@ -110,10 +122,9 @@ addNeighbor( State &neighbor, vector< pair< State,int > > &neighbors,
 
 }
 
-void
-search( const State& current_state,
-        int          ub, // upper bound over which exploration must stop
-        int&         nub,
+void search( const State& current_state,
+        int          upper_bound, // upper bound over which exploration must stop
+        int&         next_upper_bound,
         list<State>& path,
         list<State>& best_path,
         Heuristic    h,
@@ -168,6 +179,8 @@ search( const State& current_state,
     addNeighbor( neighbor, neighbors, path, h );
   }
 
+  //end generating neighbors
+
   // sort the neighbors by heuristic value
 
   //sort( neighbors.begin(), neighbors.end(),
@@ -176,51 +189,49 @@ search( const State& current_state,
   //      return left.second < right.second;
   //    } );
 
-
+  //visiting the neighbors
   for( const pair<State,int> &p : neighbors )
   {
     f = g + 1 + p.second;
-    if( f > ub )
+    if( f > upper_bound )
     {
-      if( f < nub )
+      if( f < next_upper_bound )
       {
-        nub = f; // update the next upper bound
+        next_upper_bound = f; // update the next upper bound
       }
     }
     else
     {
       path.push_back( p.first );
-      search( p.first, ub, nub, path, best_path, h, nb_visited_state );
+      search( p.first, upper_bound, next_upper_bound, path, best_path, h, nb_visited_state );
       path.pop_back();
       if( !best_path.empty() ) return;
     }
   }
 }
 
-void
-ida( const State&     initial_state, 
+void ida( const State&     initial_state, 
          Heuristic    h,
          list<State>& best_path, // path from source to destination
          int&         nb_visited_state )
 {
-  int ub;                     // current upper bound
-  int nub = h( initial_state ); // next upper bound
+  int upper_bound;                     // current upper bound
+  int next_upper_bound = h( initial_state ); // next upper bound
   list<State> path;
   path.push_back( initial_state ); // the path to the target starts with the source
 
-  while( best_path.empty() && nub != numeric_limits<int>::max() )
+  while( best_path.empty() && next_upper_bound != numeric_limits<int>::max() )
   {
-    ub = nub;
-    nub = numeric_limits<int>::max();
+    upper_bound = next_upper_bound;
+    next_upper_bound = numeric_limits<int>::max();
 
-    cout << "upper bound: " << ub;
-    search( initial_state, ub, nub, path, best_path, h, nb_visited_state );
+    cout << "upper bound: " << upper_bound;
+    search( initial_state, upper_bound, next_upper_bound, path, best_path, h, nb_visited_state );
     cout << " ; nb_visited_state: " << nb_visited_state << endl;
   }
 }
 
-int
-main()
+int main()
 {
   //State b = {11,5,12,14,15,2,0,9,13,7,6,1,3,10,4,8}; // hard
   //State b = {15,2,12,11,14,13,9,5,1,3,8,7,0,10,6,4};
